@@ -435,19 +435,27 @@ sep_git_dir_worktree ()  {
 	test_when_finished "rm -rf mainwt linkwt seprepo" &&
 	git init mainwt &&
 	test_commit -C mainwt gumby &&
-	git -C mainwt worktree add --detach ../linkwt &&
-	git -C "$1" init --separate-git-dir ../seprepo &&
+	git -C mainwt worktree add $1 --detach ../linkwt &&
+	git -C "$2" init --separate-git-dir ../seprepo &&
 	git -C mainwt rev-parse --git-common-dir >expect &&
 	git -C linkwt rev-parse --git-common-dir >actual &&
 	test_cmp expect actual
 }
 
-test_expect_success 're-init to move gitdir with linked worktrees' '
-	sep_git_dir_worktree mainwt
+test_expect_success 're-init to move gitdir with linked worktrees (absolute)' '
+	sep_git_dir_worktree --no-relative-paths mainwt
 '
 
-test_expect_success 're-init to move gitdir within linked worktree' '
-	sep_git_dir_worktree linkwt
+test_expect_success 're-init to move gitdir within linked worktree (absolute)' '
+	sep_git_dir_worktree --no-relative-paths linkwt
+'
+
+test_expect_success 're-init to move gitdir with linked worktrees (relative)' '
+	sep_git_dir_worktree --relative-paths mainwt
+'
+
+test_expect_success 're-init to move gitdir within linked worktree (relative)' '
+	sep_git_dir_worktree --relative-paths linkwt
 '
 
 test_expect_success MINGW '.git hidden' '

@@ -5,6 +5,8 @@
 
 struct strbuf;
 
+extern int use_relative_paths;
+
 struct worktree {
 	/* The repository this worktree belongs to. */
 	struct repository *repo;
@@ -132,6 +134,16 @@ typedef void (* worktree_repair_fn)(int iserr, const char *path,
 void repair_worktrees(worktree_repair_fn, void *cb_data);
 
 /*
+ * Repair the linked worktrees after the gitdir has been moved.
+ */
+void repair_worktrees_after_gitdir_move(const char *old_path);
+
+/*
+ * Repair the linked worktree after the gitdir has been moved.
+ */
+void repair_worktree_after_gitdir_move(struct worktree *wt, const char *old_path);
+
+/*
  * Repair administrative files corresponding to the worktree at the given path.
  * The worktree's .git file pointing at the repository must be intact for the
  * repair to succeed. Useful for re-associating an orphaned worktree with the
@@ -204,5 +216,17 @@ void strbuf_worktree_ref(const struct worktree *wt,
  * if any of these steps fail.
  */
 int init_worktree_config(struct repository *r);
+
+/**
+ * Write the .git file and gitdir file that links the worktree to the repository.
+ *
+ * The `dotgit` parameter is the path to the worktree's .git file, and `gitdir`
+ * is the path to the repository's `gitdir` file.
+ *
+ * Example
+ *  dotgit: "/path/to/foo/.git"
+ *  gitdir: "/path/to/repo/worktrees/foo/gitdir"
+ */
+void write_worktree_linking_files(struct strbuf dotgit, struct strbuf gitdir);
 
 #endif

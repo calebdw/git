@@ -134,6 +134,9 @@ static int git_worktree_config(const char *var, const char *value,
 	if (!strcmp(var, "worktree.guessremote")) {
 		guess_remote = git_config_bool(var, value);
 		return 0;
+	} else if (!strcmp(var, "worktree.userelativepaths")) {
+		use_relative_paths = git_config_bool(var, value);
+		return 0;
 	}
 
 	return git_default_config(var, value, ctx, cb);
@@ -414,7 +417,7 @@ static int add_worktree(const char *path, const char *refname,
 			const struct add_opts *opts)
 {
 	struct strbuf sb_git = STRBUF_INIT, sb_repo = STRBUF_INIT;
-	struct strbuf sb = STRBUF_INIT, realpath = STRBUF_INIT;
+	struct strbuf sb = STRBUF_INIT;
 	const char *name;
 	struct strvec child_env = STRVEC_INIT;
 	unsigned int counter = 0;
@@ -490,11 +493,7 @@ static int add_worktree(const char *path, const char *refname,
 
 	strbuf_reset(&sb);
 	strbuf_addf(&sb, "%s/gitdir", sb_repo.buf);
-	strbuf_realpath(&realpath, sb_git.buf, 1);
-	write_file(sb.buf, "%s", realpath.buf);
-	strbuf_realpath(&realpath, repo_get_common_dir(the_repository), 1);
-	write_file(sb_git.buf, "gitdir: %s/worktrees/%s",
-		   realpath.buf, name);
+	write_worktree_linking_files(sb_git, sb);
 	strbuf_reset(&sb);
 	strbuf_addf(&sb, "%s/commondir", sb_repo.buf);
 	write_file(sb.buf, "../..");
@@ -582,7 +581,6 @@ done:
 	strbuf_release(&sb_repo);
 	strbuf_release(&sb_git);
 	strbuf_release(&sb_name);
-	strbuf_release(&realpath);
 	free_worktree(wt);
 	return ret;
 }
@@ -794,6 +792,8 @@ static int add(int ac, const char **av, const char *prefix)
 			     PARSE_OPT_NOARG | PARSE_OPT_OPTARG),
 		OPT_BOOL(0, "guess-remote", &guess_remote,
 			 N_("try to match the new branch name with a remote-tracking branch")),
+		OPT_BOOL(0, "relative-paths", &use_relative_paths,
+			 N_("use relative paths for worktrees")),
 		OPT_END()
 	};
 	int ret;
@@ -1187,6 +1187,8 @@ static int move_worktree(int ac, const char **av, const char *prefix)
 		OPT__FORCE(&force,
 			 N_("force move even if worktree is dirty or locked"),
 			 PARSE_OPT_NOCOMPLETE),
+		OPT_BOOL(0, "relative-paths", &use_relative_paths,
+			 N_("use relative paths for worktrees")),
 		OPT_END()
 	};
 	struct worktree **worktrees, *wt;
@@ -1380,6 +1382,8 @@ static int repair(int ac, const char **av, const char *prefix)
 	const char **p;
 	const char *self[] = { ".", NULL };
 	struct option options[] = {
+		OPT_BOOL(0, "relative-paths", &use_relative_paths,
+			 N_("use relative paths for worktrees")),
 		OPT_END()
 	};
 	int rc = 0;

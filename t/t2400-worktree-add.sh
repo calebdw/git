@@ -1207,4 +1207,45 @@ test_expect_success '"add" with initialized submodule, with submodule.recurse se
 	git -C project-clone -c submodule.recurse worktree add ../project-5
 '
 
+test_expect_success 'can create worktrees with relative paths' '
+	test_when_finished "git worktree remove relative" &&
+	git config worktree.useRelativePaths false &&
+	git worktree add --relative-paths ./relative &&
+	cat relative/.git >actual &&
+	echo "gitdir: ../.git/worktrees/relative" >expect &&
+	test_cmp expect actual &&
+	cat .git/worktrees/relative/gitdir >actual &&
+	echo "../../../relative/.git" >expect &&
+	test_cmp expect actual
+
+'
+
+test_expect_success 'can create worktrees with absolute paths' '
+	git config worktree.useRelativePaths true &&
+	git worktree add ./relative &&
+	cat relative/.git >actual &&
+	echo "gitdir: ../.git/worktrees/relative" >expect &&
+	test_cmp expect actual &&
+	git worktree add --no-relative-paths ./absolute &&
+	cat absolute/.git >actual &&
+	echo "gitdir: $(pwd)/.git/worktrees/absolute" >expect &&
+	test_cmp expect actual
+'
+
+test_expect_success 'move repo without breaking relative internal links' '
+	test_when_finished rm -rf repo moved &&
+	git init repo &&
+	(
+		cd repo &&
+		git config worktree.useRelativePaths true &&
+		test_commit initial &&
+		git worktree add wt1 &&
+		cd .. &&
+		mv repo moved &&
+		cd moved/wt1 &&
+		git status >out 2>err &&
+		test_must_be_empty err
+	)
+'
+
 test_done

@@ -216,6 +216,15 @@ To remove a locked worktree, specify `--force` twice.
 This can also be set up as the default behaviour by using the
 `worktree.guessRemote` config option.
 
+--[no-]relative-paths::
+	The worktree paths will be stored relative to the repository’s
+	top-level directory, rather than using absolute paths.
+	This is particularly useful for setups where the repository may be moved
+	between different locations or environments.
++
+This can also be set up as the default behaviour by using the
+`worktree.useRelativePaths` config option.
+
 --[no-]track::
 	When creating a new branch, if `<commit-ish>` is a branch,
 	mark it as "upstream" from the new branch.  This is the
