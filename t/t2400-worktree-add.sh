@@ -1248,4 +1248,17 @@ test_expect_success 'move repo without breaking relative internal links' '
 	)
 '
 
+test_expect_success 'relative worktree sets extension config' '
+	test_when_finished "rm -rf repo" &&
+	git init repo &&
+	git -C repo commit --allow-empty -m base &&
+	git -C repo worktree add --relative-paths ./foo &&
+	git -C repo config get core.repositoryformatversion >actual &&
+	echo 1 >expected &&
+	test_cmp expected actual &&
+	git -C repo config get extensions.relativeworktrees >actual &&
+	echo true >expected &&
+	test_cmp expected actual
+'
+
 test_done

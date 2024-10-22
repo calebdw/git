@@ -1025,6 +1025,14 @@ void write_worktree_linking_files(struct strbuf dotgit, struct strbuf gitdir)
 	strbuf_strip_suffix(&repo, "/gitdir");
 	strbuf_realpath(&repo, repo.buf, 1);
 
+	if (use_relative_paths && !the_repository->repository_format_relative_worktrees) {
+		if (upgrade_repository_format(1) < 0)
+			die(_("unable to upgrade repository format to support relative worktrees"));
+		if (git_config_set_gently("extensions.relativeWorktrees", "true"))
+			die(_("unable to set extensions.relativeWorktrees setting"));
+		the_repository->repository_format_relative_worktrees = 1;
+	}
+
 	if (use_relative_paths) {
 		write_file(gitdir.buf, "%s/.git", relative_path(path.buf, repo.buf, &tmp));
 		write_file(dotgit.buf, "gitdir: %s", relative_path(repo.buf, path.buf, &tmp));
