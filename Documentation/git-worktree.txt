@@ -352,12 +352,11 @@ DETAILS
 -------
 Each linked worktree has a private sub-directory in the repository's
 `$GIT_DIR/worktrees` directory.  The private sub-directory's name is usually
-the base name of the linked worktree's path, possibly appended with a
+the base name of the linked worktree's path, appended with a random
 number to make it unique.  For example, when `$GIT_DIR=/path/main/.git` the
 command `git worktree add /path/other/test-next next` creates the linked
 worktree in `/path/other/test-next` and also creates a
-`$GIT_DIR/worktrees/test-next` directory (or `$GIT_DIR/worktrees/test-next1`
-if `test-next` is already taken).
+`$GIT_DIR/worktrees/test-next-#######` directory.
 
 Within a linked worktree, `$GIT_DIR` is set to point to this private
 directory (e.g. `/path/main/.git/worktrees/test-next` in the example) and

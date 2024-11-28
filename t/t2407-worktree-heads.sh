@@ -19,7 +19,8 @@ test_expect_success 'setup' '
 		test_commit $i &&
 		git branch wt-$i &&
 		git branch fake-$i &&
-		git worktree add wt-$i wt-$i || return 1
+		GIT_TEST_WORKTREE_SUFFIX=$i \
+			git worktree add wt-$i wt-$i || return 1
 	done &&
 
 	# Create a server that updates each branch by one commit
@@ -132,20 +133,20 @@ test_expect_success 'refuse to overwrite when in error states' '
 	test_when_finished rm -rf .git/worktrees/wt-*/BISECT_* &&
 
 	# Both branches are currently under rebase.
-	mkdir -p .git/worktrees/wt-3/rebase-merge &&
-	touch .git/worktrees/wt-3/rebase-merge/interactive &&
-	echo refs/heads/fake-1 >.git/worktrees/wt-3/rebase-merge/head-name &&
-	echo refs/heads/fake-2 >.git/worktrees/wt-3/rebase-merge/onto &&
-	mkdir -p .git/worktrees/wt-4/rebase-merge &&
-	touch .git/worktrees/wt-4/rebase-merge/interactive &&
-	echo refs/heads/fake-2 >.git/worktrees/wt-4/rebase-merge/head-name &&
-	echo refs/heads/fake-1 >.git/worktrees/wt-4/rebase-merge/onto &&
+	mkdir -p .git/worktrees/wt-3-3/rebase-merge &&
+	touch .git/worktrees/wt-3-3/rebase-merge/interactive &&
+	echo refs/heads/fake-1 >.git/worktrees/wt-3-3/rebase-merge/head-name &&
+	echo refs/heads/fake-2 >.git/worktrees/wt-3-3/rebase-merge/onto &&
+	mkdir -p .git/worktrees/wt-4-4/rebase-merge &&
+	touch .git/worktrees/wt-4-4/rebase-merge/interactive &&
+	echo refs/heads/fake-2 >.git/worktrees/wt-4-4/rebase-merge/head-name &&
+	echo refs/heads/fake-1 >.git/worktrees/wt-4-4/rebase-merge/onto &&
 
 	# Both branches are currently under bisect.
-	touch .git/worktrees/wt-4/BISECT_LOG &&
-	echo refs/heads/fake-2 >.git/worktrees/wt-4/BISECT_START &&
-	touch .git/worktrees/wt-1/BISECT_LOG &&
-	echo refs/heads/fake-1 >.git/worktrees/wt-1/BISECT_START &&
+	touch .git/worktrees/wt-4-4/BISECT_LOG &&
+	echo refs/heads/fake-2 >.git/worktrees/wt-4-4/BISECT_START &&
+	touch .git/worktrees/wt-1-1/BISECT_LOG &&
+	echo refs/heads/fake-1 >.git/worktrees/wt-1-1/BISECT_START &&
 
 	for i in 1 2
 	do

@@ -8,12 +8,12 @@ export GIT_TEST_DEFAULT_INITIAL_BRANCH_NAME
 TEST_PASSES_SANITIZE_LEAK=true
 . ./test-lib.sh
 
-RWT="test-tool ref-store worktree:wt"
+RWT="test-tool ref-store worktree:wt-456"
 RMAIN="test-tool ref-store worktree:main"
 
 test_expect_success 'setup' '
 	test_commit first &&
-	git worktree add -b wt-main wt &&
+	GIT_TEST_WORKTREE_SUFFIX=456 git worktree add -b wt-main wt &&
 	(
 		cd wt &&
 		test_commit second

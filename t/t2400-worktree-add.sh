@@ -71,21 +71,21 @@ test_expect_success '"add" worktree' '
 test_expect_success '"add" worktree with lock' '
 	git worktree add --detach --lock here-with-lock main &&
 	test_when_finished "git worktree unlock here-with-lock || :" &&
-	test -f .git/worktrees/here-with-lock/locked
+	test -f .git/worktrees/here-with-lock-*/locked
 '
 
 test_expect_success '"add" worktree with lock and reason' '
 	lock_reason="why not" &&
 	git worktree add --detach --lock --reason "$lock_reason" here-with-lock-reason main &&
 	test_when_finished "git worktree unlock here-with-lock-reason || :" &&
-	test -f .git/worktrees/here-with-lock-reason/locked &&
+	test -f .git/worktrees/here-with-lock-reason-*/locked &&
 	echo "$lock_reason" >expect &&
-	test_cmp expect .git/worktrees/here-with-lock-reason/locked
+	test_cmp expect .git/worktrees/here-with-lock-reason-*/locked
 '
 
 test_expect_success '"add" worktree with reason but no lock' '
 	test_must_fail git worktree add --detach --reason "why not" here-with-reason-only main &&
-	test_path_is_missing .git/worktrees/here-with-reason-only/locked
+	test_path_is_missing .git/worktrees/here-with-reason-only-*/locked
 '
 
 test_expect_success '"add" worktree from a subdir' '
@@ -413,16 +413,16 @@ test_expect_success '"add --orphan" with empty repository' '
 test_expect_success '"add" worktree with orphan branch and lock' '
 	git worktree add --lock --orphan -b orphanbr orphan-with-lock &&
 	test_when_finished "git worktree unlock orphan-with-lock || :" &&
-	test -f .git/worktrees/orphan-with-lock/locked
+	test -f .git/worktrees/orphan-with-lock-*/locked
 '
 
 test_expect_success '"add" worktree with orphan branch, lock, and reason' '
 	lock_reason="why not" &&
 	git worktree add --detach --lock --reason "$lock_reason" orphan-with-lock-reason main &&
 	test_when_finished "git worktree unlock orphan-with-lock-reason || :" &&
-	test -f .git/worktrees/orphan-with-lock-reason/locked &&
+	test -f .git/worktrees/orphan-with-lock-reason-*/locked &&
 	echo "$lock_reason" >expect &&
-	test_cmp expect .git/worktrees/orphan-with-lock-reason/locked
+	test_cmp expect .git/worktrees/orphan-with-lock-reason-*/locked
 '
 
 # Note: Quoted arguments containing spaces are not supported.
@@ -1088,10 +1088,10 @@ test_expect_success '"add" invokes post-checkout hook (branch)' '
 	post_checkout_hook &&
 	{
 		echo $ZERO_OID $(git rev-parse HEAD) 1 &&
-		echo $(pwd)/.git/worktrees/gumby &&
+		echo $(pwd)/.git/worktrees/gumby-123 &&
 		echo $(pwd)/gumby
 	} >hook.expect &&
-	git worktree add gumby &&
+	GIT_TEST_WORKTREE_SUFFIX="123" git worktree add gumby &&
 	test_cmp hook.expect gumby/hook.actual
 '
 
@@ -1099,10 +1099,10 @@ test_expect_success '"add" invokes post-checkout hook (detached)' '
 	post_checkout_hook &&
 	{
 		echo $ZERO_OID $(git rev-parse HEAD) 1 &&
-		echo $(pwd)/.git/worktrees/grumpy &&
+		echo $(pwd)/.git/worktrees/grumpy-456 &&
 		echo $(pwd)/grumpy
 	} >hook.expect &&
-	git worktree add --detach grumpy &&
+	GIT_TEST_WORKTREE_SUFFIX="456" git worktree add --detach grumpy &&
 	test_cmp hook.expect grumpy/hook.actual
 '
 
@@ -1117,10 +1117,10 @@ test_expect_success '"add" in other worktree invokes post-checkout hook' '
 	post_checkout_hook &&
 	{
 		echo $ZERO_OID $(git rev-parse HEAD) 1 &&
-		echo $(pwd)/.git/worktrees/guppy &&
+		echo $(pwd)/.git/worktrees/guppy-789 &&
 		echo $(pwd)/guppy
 	} >hook.expect &&
-	git -C gloopy worktree add --detach ../guppy &&
+	GIT_TEST_WORKTREE_SUFFIX="789" git -C gloopy worktree add --detach ../guppy &&
 	test_cmp hook.expect guppy/hook.actual
 '
 
@@ -1129,11 +1129,11 @@ test_expect_success '"add" in bare repo invokes post-checkout hook' '
 	git clone --bare . bare &&
 	{
 		echo $ZERO_OID $(git --git-dir=bare rev-parse HEAD) 1 &&
-		echo $(pwd)/bare/worktrees/goozy &&
+		echo $(pwd)/bare/worktrees/goozy-651 &&
 		echo $(pwd)/goozy
 	} >hook.expect &&
 	post_checkout_hook bare &&
-	git -C bare worktree add --detach ../goozy &&
+	GIT_TEST_WORKTREE_SUFFIX="651" git -C bare worktree add --detach ../goozy &&
 	test_cmp hook.expect goozy/hook.actual
 '
 
@@ -1165,8 +1165,9 @@ test_expect_success '"add" not tripped up by magic worktree matching"' '
 '
 
 test_expect_success FUNNYNAMES 'sanitize generated worktree name' '
-	git worktree add --detach ".  weird*..?.lock.lock" &&
-	test -d .git/worktrees/---weird-.-
+	GIT_TEST_WORKTREE_SUFFIX="1234" \
+		git worktree add --detach ".  weird*..?.lock.lock" &&
+	test -d .git/worktrees/---weird-.--1234
 '
 
 test_expect_success '"add" should not fail because of another bad worktree' '
@@ -1210,23 +1211,23 @@ test_expect_success '"add" with initialized submodule, with submodule.recurse se
 test_expect_success 'can create worktrees with relative paths' '
 	test_when_finished "git worktree remove relative" &&
 	test_config worktree.useRelativePaths false &&
-	git worktree add --relative-paths ./relative &&
-	echo "gitdir: ../.git/worktrees/relative" >expect &&
+	GIT_TEST_WORKTREE_SUFFIX=123 git worktree add --relative-paths ./relative &&
+	echo "gitdir: ../.git/worktrees/relative-123" >expect &&
 	test_cmp expect relative/.git &&
 	echo "../../../relative/.git" >expect &&
-	test_cmp expect .git/worktrees/relative/gitdir
+	test_cmp expect .git/worktrees/relative-123/gitdir
 '
 
 test_expect_success 'can create worktrees with absolute paths' '
 	test_config worktree.useRelativePaths true &&
-	git worktree add ./relative &&
-	echo "gitdir: ../.git/worktrees/relative" >expect &&
+	GIT_TEST_WORKTREE_SUFFIX=123 git worktree add ./relative &&
+	echo "gitdir: ../.git/worktrees/relative-123" >expect &&
 	test_cmp expect relative/.git &&
-	git worktree add --no-relative-paths ./absolute &&
-	echo "gitdir: $(pwd)/.git/worktrees/absolute" >expect &&
+	GIT_TEST_WORKTREE_SUFFIX=456 git worktree add --no-relative-paths ./absolute &&
+	echo "gitdir: $(pwd)/.git/worktrees/absolute-456" >expect &&
 	test_cmp expect absolute/.git &&
 	echo "$(pwd)/absolute/.git" >expect &&
-	test_cmp expect .git/worktrees/absolute/gitdir
+	test_cmp expect .git/worktrees/absolute-456/gitdir
 '
 
 test_expect_success 'move repo without breaking relative internal links' '

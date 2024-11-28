@@ -402,12 +402,12 @@ test_expect_success 'expire with multiple worktrees' '
 		cd main-wt &&
 		test_tick &&
 		test_commit foo &&
-		git  worktree add link-wt &&
+		GIT_TEST_WORKTREE_SUFFIX=123 git  worktree add link-wt &&
 		test_tick &&
 		test_commit -C link-wt foobar &&
 		test_tick &&
 		git reflog expire --verbose --all --expire=$test_tick &&
-		test-tool ref-store worktree:link-wt for-each-reflog-ent HEAD >actual &&
+		test-tool ref-store worktree:link-wt-123 for-each-reflog-ent HEAD >actual &&
 		test_must_be_empty actual
 	)
 '
@@ -418,17 +418,17 @@ test_expect_success 'expire one of multiple worktrees' '
 		cd main-wt2 &&
 		test_tick &&
 		test_commit foo &&
-		git worktree add link-wt &&
+		GIT_TEST_WORKTREE_SUFFIX=456 git worktree add link-wt &&
 		test_tick &&
 		test_commit -C link-wt foobar &&
 		test_tick &&
-		test-tool ref-store worktree:link-wt for-each-reflog-ent HEAD \
+		test-tool ref-store worktree:link-wt-456 for-each-reflog-ent HEAD \
 			>expect-link-wt &&
 		git reflog expire --verbose --all --expire=$test_tick \
 			--single-worktree &&
 		test-tool ref-store worktree:main for-each-reflog-ent HEAD \
 			>actual-main &&
-		test-tool ref-store worktree:link-wt for-each-reflog-ent HEAD \
+		test-tool ref-store worktree:link-wt-456 for-each-reflog-ent HEAD \
 			>actual-link-wt &&
 		test_must_be_empty actual-main &&
 		test_cmp expect-link-wt actual-link-wt

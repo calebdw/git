@@ -326,8 +326,8 @@ test_expect_success 'refs/worktree must not be packed' '
 	git pack-refs --all &&
 	test_path_is_missing .git/refs/tags/wt1 &&
 	test_path_is_file .git/refs/worktree/foo &&
-	test_path_is_file .git/worktrees/wt1/refs/worktree/foo &&
-	test_path_is_file .git/worktrees/wt2/refs/worktree/foo
+	test_path_is_file .git/worktrees/wt1-*/refs/worktree/foo &&
+	test_path_is_file .git/worktrees/wt2-*/refs/worktree/foo
 '
 
 # we do not want to count on running pack-refs to

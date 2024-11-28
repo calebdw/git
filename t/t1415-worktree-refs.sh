@@ -9,8 +9,8 @@ test_expect_success 'setup' '
 	test_commit initial &&
 	test_commit wt1 &&
 	test_commit wt2 &&
-	git worktree add wt1 wt1 &&
-	git worktree add wt2 wt2 &&
+	GIT_TEST_WORKTREE_SUFFIX=123 git worktree add wt1 wt1 &&
+	GIT_TEST_WORKTREE_SUFFIX=456 git worktree add wt2 wt2 &&
 	git checkout initial &&
 	git update-ref refs/worktree/foo HEAD &&
 	git -C wt1 update-ref refs/worktree/foo HEAD &&
@@ -37,16 +37,16 @@ test_expect_success 'ambiguous main-worktree/HEAD' '
 '
 
 test_expect_success 'resolve worktrees/xx/HEAD' '
-	test_cmp_rev worktrees/wt1/HEAD wt1 &&
-	( cd wt1 && test_cmp_rev worktrees/wt1/HEAD wt1 ) &&
-	( cd wt2 && test_cmp_rev worktrees/wt1/HEAD wt1 )
+	test_cmp_rev worktrees/wt1-123/HEAD wt1 &&
+	( cd wt1 && test_cmp_rev worktrees/wt1-123/HEAD wt1 ) &&
+	( cd wt2 && test_cmp_rev worktrees/wt1-123/HEAD wt1 )
 '
 
 test_expect_success 'ambiguous worktrees/xx/HEAD' '
-	git update-ref refs/heads/worktrees/wt1/HEAD $(git rev-parse HEAD) &&
-	test_when_finished git update-ref -d refs/heads/worktrees/wt1/HEAD &&
-	git rev-parse worktrees/wt1/HEAD 2>warn &&
-	grep "worktrees/wt1/HEAD.*ambiguous" warn
+	git update-ref refs/heads/worktrees/wt1-123/HEAD $(git rev-parse HEAD) &&
+	test_when_finished git update-ref -d refs/heads/worktrees/wt1-123/HEAD &&
+	git rev-parse worktrees/wt1-123/HEAD 2>warn &&
+	grep "worktrees/wt1-123/HEAD.*ambiguous" warn
 '
 
 test_expect_success 'reflog of main-worktree/HEAD' '
@@ -58,12 +58,12 @@ test_expect_success 'reflog of main-worktree/HEAD' '
 '
 
 test_expect_success 'reflog of worktrees/xx/HEAD' '
-	git -C wt2 reflog HEAD | sed "s/HEAD/worktrees\/wt2\/HEAD/" >expected &&
-	git reflog worktrees/wt2/HEAD >actual &&
+	git -C wt2 reflog HEAD | sed "s/HEAD/worktrees\/wt2-456\/HEAD/" >expected &&
+	git reflog worktrees/wt2-456/HEAD >actual &&
 	test_cmp expected actual &&
-	git -C wt1 reflog worktrees/wt2/HEAD >actual.wt1 &&
+	git -C wt1 reflog worktrees/wt2-456/HEAD >actual.wt1 &&
 	test_cmp expected actual.wt1 &&
-	git -C wt2 reflog worktrees/wt2/HEAD >actual.wt2 &&
+	git -C wt2 reflog worktrees/wt2-456/HEAD >actual.wt2 &&
 	test_cmp expected actual.wt2
 '
 

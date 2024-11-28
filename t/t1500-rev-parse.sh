@@ -80,7 +80,7 @@ test_expect_success 'setup' '
 	git checkout -b side &&
 	test_commit def &&
 	git checkout main &&
-	git worktree add worktree side
+	GIT_TEST_WORKTREE_SUFFIX=123 git worktree add worktree side
 '
 
 test_rev_parse toplevel false false true '' .git "$ROOT/.git"
@@ -113,7 +113,7 @@ test_expect_success 'rev-parse --path-format=absolute' '
 	test_one "." "$ROOT/.git" --path-format=absolute --git-common-dir &&
 	test_one "sub/dir" "$ROOT/.git" --path-format=absolute --git-dir &&
 	test_one "sub/dir" "$ROOT/.git" --path-format=absolute --git-common-dir &&
-	test_one "worktree" "$ROOT/.git/worktrees/worktree" --path-format=absolute --git-dir &&
+	test_one "worktree" "$ROOT/.git/worktrees/worktree-123" --path-format=absolute --git-dir &&
 	test_one "worktree" "$ROOT/.git" --path-format=absolute --git-common-dir &&
 	test_one "." "$ROOT" --path-format=absolute --show-toplevel &&
 	test_one "." "$ROOT/.git/objects" --path-format=absolute --git-path objects &&
@@ -125,7 +125,7 @@ test_expect_success 'rev-parse --path-format=relative' '
 	test_one "." ".git" --path-format=relative --git-common-dir &&
 	test_one "sub/dir" "../../.git" --path-format=relative --git-dir &&
 	test_one "sub/dir" "../../.git" --path-format=relative --git-common-dir &&
-	test_one "worktree" "../.git/worktrees/worktree" --path-format=relative --git-dir &&
+	test_one "worktree" "../.git/worktrees/worktree-123" --path-format=relative --git-dir &&
 	test_one "worktree" "../.git" --path-format=relative --git-common-dir &&
 	test_one "." "./" --path-format=relative --show-toplevel &&
 	test_one "." ".git/objects" --path-format=relative --git-path objects &&

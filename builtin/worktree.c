@@ -421,6 +421,7 @@ static int add_worktree(const char *path, const char *refname,
 	struct strbuf sb_git = STRBUF_INIT, sb_repo = STRBUF_INIT;
 	struct strbuf sb = STRBUF_INIT;
 	const char *name;
+	const char *suffix;
 	struct strvec child_env = STRVEC_INIT;
 	unsigned int counter = 0;
 	int len, ret;
@@ -455,6 +456,11 @@ static int add_worktree(const char *path, const char *refname,
 	strbuf_reset(&sb);
 	name = sb_name.buf;
 	git_path_buf(&sb_repo, "worktrees/%s", name);
+	suffix = getenv("GIT_TEST_WORKTREE_SUFFIX");
+	if (suffix)
+		strbuf_addf(&sb_repo, "-%s", suffix);
+	else
+		strbuf_addf(&sb_repo, "-%u", git_rand());
 	len = sb_repo.len;
 	if (safe_create_leading_directories_const(sb_repo.buf))
 		die_errno(_("could not create leading directories of '%s'"),

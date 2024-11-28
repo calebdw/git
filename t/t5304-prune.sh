@@ -293,7 +293,7 @@ test_expect_success 'prune: handle HEAD in multiple worktrees' '
 	echo "new blob for third-worktree" >third-worktree/blob &&
 	git -C third-worktree add blob &&
 	git -C third-worktree commit -m "third" &&
-	rm .git/worktrees/third-worktree/index &&
+	rm .git/worktrees/third-worktree-*/index &&
 	test_must_fail git -C third-worktree show :blob &&
 	git prune --expire=now &&
 	git -C third-worktree show HEAD:blob >actual &&

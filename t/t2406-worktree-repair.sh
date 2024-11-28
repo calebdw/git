@@ -106,8 +106,8 @@ test_expect_success 'repo not found; .git not file' '
 
 test_expect_success 'repo not found; .git not referencing repo' '
 	test_when_finished "rm -rf side not-a-repo && git worktree prune" &&
-	git worktree add --detach side &&
-	sed s,\.git/worktrees/side$,not-a-repo, side/.git >side/.newgit &&
+	GIT_TEST_WORKTREE_SUFFIX=1234 git worktree add --detach side &&
+	sed s,\.git/worktrees/side-1234$,not-a-repo, side/.git >side/.newgit &&
 	mv side/.newgit side/.git &&
 	mkdir not-a-repo &&
 	test_must_fail git worktree repair side 2>err &&
@@ -127,41 +127,41 @@ test_expect_success 'repo not found; .git file broken' '
 test_expect_success 'repair broken gitdir' '
 	test_when_finished "rm -rf orig moved && git worktree prune" &&
 	git worktree add --detach orig &&
-	sed s,orig/\.git$,moved/.git, .git/worktrees/orig/gitdir >expect &&
-	rm .git/worktrees/orig/gitdir &&
+	sed s,orig/\.git$,moved/.git, .git/worktrees/orig-*/gitdir >expect &&
+	rm .git/worktrees/orig-*/gitdir &&
 	mv orig moved &&
 	git worktree repair moved 2>err &&
-	test_cmp expect .git/worktrees/orig/gitdir &&
+	test_cmp expect .git/worktrees/orig-*/gitdir &&
 	test_grep "gitdir unreadable" err
 '
 
 test_expect_success 'repair incorrect gitdir' '
 	test_when_finished "rm -rf orig moved && git worktree prune" &&
 	git worktree add --detach orig &&
-	sed s,orig/\.git$,moved/.git, .git/worktrees/orig/gitdir >expect &&
+	sed s,orig/\.git$,moved/.git, .git/worktrees/orig-*/gitdir >expect &&
 	mv orig moved &&
 	git worktree repair moved 2>err &&
-	test_cmp expect .git/worktrees/orig/gitdir &&
+	test_cmp expect .git/worktrees/orig-*/gitdir &&
 	test_grep "gitdir incorrect" err
 '
 
 test_expect_success 'repair gitdir (implicit) from linked worktree' '
 	test_when_finished "rm -rf orig moved && git worktree prune" &&
 	git worktree add --detach orig &&
-	sed s,orig/\.git$,moved/.git, .git/worktrees/orig/gitdir >expect &&
+	sed s,orig/\.git$,moved/.git, .git/worktrees/orig-*/gitdir >expect &&
 	mv orig moved &&
 	git -C moved worktree repair 2>err &&
-	test_cmp expect .git/worktrees/orig/gitdir &&
+	test_cmp expect .git/worktrees/orig-*/gitdir &&
 	test_grep "gitdir incorrect" err
 '
 
 test_expect_success 'unable to repair gitdir (implicit) from main worktree' '
 	test_when_finished "rm -rf orig moved && git worktree prune" &&
 	git worktree add --detach orig &&
-	cat .git/worktrees/orig/gitdir >expect &&
+	cat .git/worktrees/orig-*/gitdir >expect &&
 	mv orig moved &&
 	git worktree repair 2>err &&
-	test_cmp expect .git/worktrees/orig/gitdir &&
+	test_cmp expect .git/worktrees/orig-*/gitdir &&
 	test_must_be_empty err
 '
 
@@ -170,15 +170,15 @@ test_expect_success 'repair multiple gitdir files' '
 		git worktree prune" &&
 	git worktree add --detach orig1 &&
 	git worktree add --detach orig2 &&
-	sed s,orig1/\.git$,moved1/.git, .git/worktrees/orig1/gitdir >expect1 &&
-	sed s,orig2/\.git$,moved2/.git, .git/worktrees/orig2/gitdir >expect2 &&
+	sed s,orig1/\.git$,moved1/.git, .git/worktrees/orig1-*/gitdir >expect1 &&
+	sed s,orig2/\.git$,moved2/.git, .git/worktrees/orig2-*/gitdir >expect2 &&
 	mv orig1 moved1 &&
 	mv orig2 moved2 &&
 	git worktree repair moved1 moved2 2>err &&
-	test_cmp expect1 .git/worktrees/orig1/gitdir &&
-	test_cmp expect2 .git/worktrees/orig2/gitdir &&
-	test_grep "gitdir incorrect:.*orig1/gitdir$" err &&
-	test_grep "gitdir incorrect:.*orig2/gitdir$" err
+	test_cmp expect1 .git/worktrees/orig1-*/gitdir &&
+	test_cmp expect2 .git/worktrees/orig2-*/gitdir &&
+	test_grep "gitdir incorrect:.*orig1-.*/gitdir$" err &&
+	test_grep "gitdir incorrect:.*orig2-.*/gitdir$" err
 '
 
 test_expect_success 'repair moved main and linked worktrees' '
@@ -186,14 +186,12 @@ test_expect_success 'repair moved main and linked worktrees' '
 	test_create_repo main &&
 	test_commit -C main init &&
 	git -C main worktree add --detach ../side &&
-	sed "s,side/\.git$,sidemoved/.git," \
-		main/.git/worktrees/side/gitdir >expect-gitdir &&
-	sed "s,main/.git/worktrees/side$,mainmoved/.git/worktrees/side," \
-		side/.git >expect-gitfile &&
+	sed "s,side,sidemoved," main/.git/worktrees/side-*/gitdir >expect-gitdir &&
+	sed "s,main,mainmoved," side/.git >expect-gitfile &&
 	mv main mainmoved &&
 	mv side sidemoved &&
 	git -C mainmoved worktree repair ../sidemoved &&
-	test_cmp expect-gitdir mainmoved/.git/worktrees/side/gitdir &&
+	test_cmp expect-gitdir mainmoved/.git/worktrees/side-*/gitdir &&
 	test_cmp expect-gitfile sidemoved/.git
 '
 
@@ -203,16 +201,15 @@ test_expect_success 'repair copied main and linked worktrees' '
 	git -C orig init main &&
 	test_commit -C orig/main nothing &&
 	git -C orig/main worktree add ../linked &&
-	cp orig/main/.git/worktrees/linked/gitdir orig/main.expect &&
+	cp orig/main/.git/worktrees/linked-*/gitdir orig/main.expect &&
 	cp orig/linked/.git orig/linked.expect &&
 	cp -R orig dup &&
 	sed "s,orig/linked/\.git$,dup/linked/.git," orig/main.expect >dup/main.expect &&
-	sed "s,orig/main/\.git/worktrees/linked$,dup/main/.git/worktrees/linked," \
-		orig/linked.expect >dup/linked.expect &&
+	sed "s,orig,dup," orig/linked.expect >dup/linked.expect &&
 	git -C dup/main worktree repair ../linked &&
-	test_cmp orig/main.expect orig/main/.git/worktrees/linked/gitdir &&
+	test_cmp orig/main.expect orig/main/.git/worktrees/linked-*/gitdir &&
 	test_cmp orig/linked.expect orig/linked/.git &&
-	test_cmp dup/main.expect dup/main/.git/worktrees/linked/gitdir &&
+	test_cmp dup/main.expect dup/main/.git/worktrees/linked-*/gitdir &&
 	test_cmp dup/linked.expect dup/linked/.git
 '
 
@@ -221,11 +218,11 @@ test_expect_success 'repair worktree with relative path with missing gitfile' '
 	test_create_repo main &&
 	git -C main config worktree.useRelativePaths true &&
 	test_commit -C main init &&
-	git -C main worktree add --detach ../wt &&
+	GIT_TEST_WORKTREE_SUFFIX=123 git -C main worktree add --detach ../wt &&
 	rm wt/.git &&
 	test_path_is_missing wt/.git &&
 	git -C main worktree repair &&
-	echo "gitdir: ../main/.git/worktrees/wt" >expect &&
+	echo "gitdir: ../main/.git/worktrees/wt-123" >expect &&
 	test_cmp expect wt/.git
 '
 
@@ -233,12 +230,12 @@ test_expect_success 'repair absolute worktree to use relative paths' '
 	test_when_finished "rm -rf main side sidemoved" &&
 	test_create_repo main &&
 	test_commit -C main init &&
-	git -C main worktree add --detach ../side &&
+	GIT_TEST_WORKTREE_SUFFIX=456 git -C main worktree add --detach ../side &&
 	echo "../../../../sidemoved/.git" >expect-gitdir &&
-	echo "gitdir: ../main/.git/worktrees/side" >expect-gitfile &&
+	echo "gitdir: ../main/.git/worktrees/side-456" >expect-gitfile &&
 	mv side sidemoved &&
 	git -C main worktree repair --relative-paths ../sidemoved &&
-	test_cmp expect-gitdir main/.git/worktrees/side/gitdir &&
+	test_cmp expect-gitdir main/.git/worktrees/side-456/gitdir &&
 	test_cmp expect-gitfile sidemoved/.git
 '
 
@@ -246,13 +243,39 @@ test_expect_success 'repair relative worktree to use absolute paths' '
 	test_when_finished "rm -rf main side sidemoved" &&
 	test_create_repo main &&
 	test_commit -C main init &&
-	git -C main worktree add --relative-paths --detach ../side &&
+	GIT_TEST_WORKTREE_SUFFIX=789 git -C main worktree add --relative-paths --detach ../side &&
 	echo "$(pwd)/sidemoved/.git" >expect-gitdir &&
-	echo "gitdir: $(pwd)/main/.git/worktrees/side" >expect-gitfile &&
+	echo "gitdir: $(pwd)/main/.git/worktrees/side-789" >expect-gitfile &&
 	mv side sidemoved &&
 	git -C main worktree repair ../sidemoved &&
-	test_cmp expect-gitdir main/.git/worktrees/side/gitdir &&
+	test_cmp expect-gitdir main/.git/worktrees/side-789/gitdir &&
 	test_cmp expect-gitfile sidemoved/.git
+'
+
+test_expect_success 'does not repair worktrees from another repo' '
+	test_when_finished "rm -rf repo1 repo2" &&
+	mkdir -p repo1 &&
+	git -C repo1 init main &&
+	test_commit -C repo1/main nothing &&
+	git -C repo1/main worktree add ../linked &&
+	cp repo1/main/.git/worktrees/linked-*/gitdir repo1/main.expect &&
+	cp repo1/linked/.git repo1/linked.expect &&
+	mkdir -p repo2 &&
+	git -C repo2 init main &&
+	test_commit -C repo2/main nothing &&
+	git -C repo2/main worktree add ../linked &&
+	cp repo2/main/.git/worktrees/linked-*/gitdir repo2/main.expect &&
+	cp repo2/linked/.git repo2/linked.expect &&
+	git -C repo1/main worktree repair ../../repo2/linked &&
+	test_cmp repo1/main.expect repo1/main/.git/worktrees/linked-*/gitdir &&
+	test_cmp repo1/linked.expect repo1/linked/.git &&
+	test_cmp repo2/main.expect repo2/main/.git/worktrees/linked-*/gitdir &&
+	test_cmp repo2/linked.expect repo2/linked/.git &&
+	git -C repo2/main worktree repair ../../repo1/linked &&
+	test_cmp repo1/main.expect repo1/main/.git/worktrees/linked-*/gitdir &&
+	test_cmp repo1/linked.expect repo1/linked/.git &&
+	test_cmp repo2/main.expect repo2/main/.git/worktrees/linked-*/gitdir &&
+	test_cmp repo2/linked.expect repo2/linked/.git
 '
 
 test_done

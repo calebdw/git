@@ -152,10 +152,10 @@ test_expect_success REFFILES 'HEAD link pointing at a funny object (from differe
 
 test_expect_success REFFILES 'other worktree HEAD link pointing at a funny object' '
 	test_when_finished "git worktree remove -f other" &&
-	git worktree add other &&
-	echo $ZERO_OID >.git/worktrees/other/HEAD &&
+	GIT_TEST_WORKTREE_SUFFIX=123 git worktree add other &&
+	echo $ZERO_OID >.git/worktrees/other-123/HEAD &&
 	test_must_fail git fsck 2>out &&
-	test_grep "worktrees/other/HEAD: detached HEAD points" out
+	test_grep "worktrees/other-123/HEAD: detached HEAD points" out
 '
 
 test_expect_success 'other worktree HEAD link pointing at missing object' '
@@ -164,7 +164,7 @@ test_expect_success 'other worktree HEAD link pointing at missing object' '
 	object_id=$(echo "Contents missing from repo" | git hash-object --stdin) &&
 	test-tool -C other ref-store main update-ref msg HEAD $object_id "" REF_NO_DEREF,REF_SKIP_OID_VERIFICATION &&
 	test_must_fail git fsck 2>out &&
-	test_grep "worktrees/other/HEAD: invalid sha1 pointer" out
+	test_grep "worktrees/other-.*/HEAD: invalid sha1 pointer" out
 '
 
 test_expect_success 'other worktree HEAD link pointing at a funny place' '
@@ -172,7 +172,7 @@ test_expect_success 'other worktree HEAD link pointing at a funny place' '
 	git worktree add other &&
 	git -C other symbolic-ref HEAD refs/funny/place &&
 	test_must_fail git fsck 2>out &&
-	test_grep "worktrees/other/HEAD points to something strange" out
+	test_grep "worktrees/other-.*/HEAD points to something strange" out
 '
 
 test_expect_success 'commit with multiple signatures is okay' '
@@ -1033,7 +1033,7 @@ test_expect_success 'fsck error on gitattributes with excessive size' '
 
 test_expect_success 'fsck detects problems in worktree index' '
 	test_when_finished "git worktree remove -f wt" &&
-	git worktree add wt &&
+	GIT_TEST_WORKTREE_SUFFIX=123 git worktree add wt &&
 
 	echo "this will be removed to break the worktree index" >wt/file &&
 	git -C wt add file &&
@@ -1042,7 +1042,7 @@ test_expect_success 'fsck detects problems in worktree index' '
 
 	test_must_fail git fsck --name-objects >actual 2>&1 &&
 	cat >expect <<-EOF &&
-	missing blob $blob (.git/worktrees/wt/index:file)
+	missing blob $blob (.git/worktrees/wt-123/index:file)
 	EOF
 	test_cmp expect actual
 '

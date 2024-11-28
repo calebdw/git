@@ -123,7 +123,7 @@ test_expect_success 'absorb the git dir outside of primary worktree' '
 	test_when_finished "rm -rf repo-bare.git" &&
 	git clone --bare . repo-bare.git &&
 	test_when_finished "rm -rf repo-wt" &&
-	git -C repo-bare.git worktree add ../repo-wt &&
+	GIT_TEST_WORKTREE_SUFFIX=123 git -C repo-bare.git worktree add ../repo-wt &&
 
 	test_when_finished "rm -f .gitconfig" &&
 	test_config_global protocol.file.allow always &&
@@ -134,7 +134,7 @@ test_expect_success 'absorb the git dir outside of primary worktree' '
 	cat >expect <<-EOF &&
 	Migrating git directory of '\''sub2'\'' from
 	'\''$cwd/repo-wt/sub2/.git'\'' to
-	'\''$cwd/repo-bare.git/worktrees/repo-wt/modules/sub2'\''
+	'\''$cwd/repo-bare.git/worktrees/repo-wt-123/modules/sub2'\''
 	EOF
 	git -C repo-wt submodule absorbgitdirs 2>actual &&
 	test_cmp expect actual

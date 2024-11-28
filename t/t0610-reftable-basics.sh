@@ -965,11 +965,11 @@ test_expect_success 'worktree: adding worktree creates separate stack' '
 	test_commit -C repo A &&
 
 	git -C repo worktree add ../worktree &&
-	test_path_is_file repo/.git/worktrees/worktree/refs/heads &&
+	test_path_is_file repo/.git/worktrees/worktree-*/refs/heads &&
 	echo "ref: refs/heads/.invalid" >expect &&
-	test_cmp expect repo/.git/worktrees/worktree/HEAD &&
-	test_path_is_dir repo/.git/worktrees/worktree/reftable &&
-	test_path_is_file repo/.git/worktrees/worktree/reftable/tables.list
+	test_cmp expect repo/.git/worktrees/worktree-*/HEAD &&
+	test_path_is_dir repo/.git/worktrees/worktree-*/reftable &&
+	test_path_is_file repo/.git/worktrees/worktree-*/reftable/tables.list
 '
 
 test_expect_success 'worktree: pack-refs in main repo packs main refs' '
@@ -982,10 +982,10 @@ test_expect_success 'worktree: pack-refs in main repo packs main refs' '
 	GIT_TEST_REFTABLE_AUTOCOMPACTION=false \
 	git -C worktree update-ref refs/worktree/per-worktree HEAD &&
 
-	test_line_count = 4 repo/.git/worktrees/worktree/reftable/tables.list &&
+	test_line_count = 4 repo/.git/worktrees/worktree-*/reftable/tables.list &&
 	test_line_count = 3 repo/.git/reftable/tables.list &&
 	git -C repo pack-refs &&
-	test_line_count = 4 repo/.git/worktrees/worktree/reftable/tables.list &&
+	test_line_count = 4 repo/.git/worktrees/worktree-*/reftable/tables.list &&
 	test_line_count = 1 repo/.git/reftable/tables.list
 '
 
@@ -999,10 +999,10 @@ test_expect_success 'worktree: pack-refs in worktree packs worktree refs' '
 	GIT_TEST_REFTABLE_AUTOCOMPACTION=false \
 	git -C worktree update-ref refs/worktree/per-worktree HEAD &&
 
-	test_line_count = 4 repo/.git/worktrees/worktree/reftable/tables.list &&
+	test_line_count = 4 repo/.git/worktrees/worktree-*/reftable/tables.list &&
 	test_line_count = 3 repo/.git/reftable/tables.list &&
 	git -C worktree pack-refs &&
-	test_line_count = 1 repo/.git/worktrees/worktree/reftable/tables.list &&
+	test_line_count = 1 repo/.git/worktrees/worktree-*/reftable/tables.list &&
 	test_line_count = 3 repo/.git/reftable/tables.list
 '
 
@@ -1014,12 +1014,12 @@ test_expect_success 'worktree: creating shared ref updates main stack' '
 	git -C repo worktree add ../worktree &&
 	git -C repo pack-refs &&
 	git -C worktree pack-refs &&
-	test_line_count = 1 repo/.git/worktrees/worktree/reftable/tables.list &&
+	test_line_count = 1 repo/.git/worktrees/worktree-*/reftable/tables.list &&
 	test_line_count = 1 repo/.git/reftable/tables.list &&
 
 	GIT_TEST_REFTABLE_AUTOCOMPACTION=false \
 	git -C worktree update-ref refs/heads/shared HEAD &&
-	test_line_count = 1 repo/.git/worktrees/worktree/reftable/tables.list &&
+	test_line_count = 1 repo/.git/worktrees/worktree-*/reftable/tables.list &&
 	test_line_count = 2 repo/.git/reftable/tables.list
 '
 
@@ -1031,11 +1031,11 @@ test_expect_success 'worktree: creating per-worktree ref updates worktree stack'
 	git -C repo worktree add ../worktree &&
 	git -C repo pack-refs &&
 	git -C worktree pack-refs &&
-	test_line_count = 1 repo/.git/worktrees/worktree/reftable/tables.list &&
+	test_line_count = 1 repo/.git/worktrees/worktree-*/reftable/tables.list &&
 	test_line_count = 1 repo/.git/reftable/tables.list &&
 
 	git -C worktree update-ref refs/bisect/per-worktree HEAD &&
-	test_line_count = 2 repo/.git/worktrees/worktree/reftable/tables.list &&
+	test_line_count = 2 repo/.git/worktrees/worktree-*/reftable/tables.list &&
 	test_line_count = 1 repo/.git/reftable/tables.list
 '
 
@@ -1044,14 +1044,14 @@ test_expect_success 'worktree: creating per-worktree ref from main repo' '
 	git init repo &&
 	test_commit -C repo A &&
 
-	git -C repo worktree add ../worktree &&
+	GIT_TEST_WORKTREE_SUFFIX=456 git -C repo worktree add ../worktree &&
 	git -C repo pack-refs &&
 	git -C worktree pack-refs &&
-	test_line_count = 1 repo/.git/worktrees/worktree/reftable/tables.list &&
+	test_line_count = 1 repo/.git/worktrees/worktree-456/reftable/tables.list &&
 	test_line_count = 1 repo/.git/reftable/tables.list &&
 
-	git -C repo update-ref worktrees/worktree/refs/bisect/per-worktree HEAD &&
-	test_line_count = 2 repo/.git/worktrees/worktree/reftable/tables.list &&
+	git -C repo update-ref worktrees/worktree-456/refs/bisect/per-worktree HEAD &&
+	test_line_count = 2 repo/.git/worktrees/worktree-456/reftable/tables.list &&
 	test_line_count = 1 repo/.git/reftable/tables.list
 '
 
@@ -1060,18 +1060,18 @@ test_expect_success 'worktree: creating per-worktree ref from second worktree' '
 	git init repo &&
 	test_commit -C repo A &&
 
-	git -C repo worktree add ../wt1 &&
-	git -C repo worktree add ../wt2 &&
+	GIT_TEST_WORKTREE_SUFFIX=123 git -C repo worktree add ../wt1 &&
+	GIT_TEST_WORKTREE_SUFFIX=456 git -C repo worktree add ../wt2 &&
 	git -C repo pack-refs &&
 	git -C wt1 pack-refs &&
 	git -C wt2 pack-refs &&
-	test_line_count = 1 repo/.git/worktrees/wt1/reftable/tables.list &&
-	test_line_count = 1 repo/.git/worktrees/wt2/reftable/tables.list &&
+	test_line_count = 1 repo/.git/worktrees/wt1-123/reftable/tables.list &&
+	test_line_count = 1 repo/.git/worktrees/wt2-456/reftable/tables.list &&
 	test_line_count = 1 repo/.git/reftable/tables.list &&
 
-	git -C wt1 update-ref worktrees/wt2/refs/bisect/per-worktree HEAD &&
-	test_line_count = 1 repo/.git/worktrees/wt1/reftable/tables.list &&
-	test_line_count = 2 repo/.git/worktrees/wt2/reftable/tables.list &&
+	git -C wt1 update-ref worktrees/wt2-456/refs/bisect/per-worktree HEAD &&
+	test_line_count = 1 repo/.git/worktrees/wt1-123/reftable/tables.list &&
+	test_line_count = 2 repo/.git/worktrees/wt2-456/reftable/tables.list &&
 	test_line_count = 1 repo/.git/reftable/tables.list
 '
 
@@ -1080,18 +1080,18 @@ test_expect_success 'worktree: can create shared and per-worktree ref in one tra
 	git init repo &&
 	test_commit -C repo A &&
 
-	git -C repo worktree add ../worktree &&
+	GIT_TEST_WORKTREE_SUFFIX=123 git -C repo worktree add ../worktree &&
 	git -C repo pack-refs &&
 	git -C worktree pack-refs &&
-	test_line_count = 1 repo/.git/worktrees/worktree/reftable/tables.list &&
+	test_line_count = 1 repo/.git/worktrees/worktree-123/reftable/tables.list &&
 	test_line_count = 1 repo/.git/reftable/tables.list &&
 
 	cat >stdin <<-EOF &&
-	create worktrees/worktree/refs/bisect/per-worktree HEAD
+	create worktrees/worktree-123/refs/bisect/per-worktree HEAD
 	create refs/branches/shared HEAD
 	EOF
 	git -C repo update-ref --stdin <stdin &&
-	test_line_count = 2 repo/.git/worktrees/worktree/reftable/tables.list &&
+	test_line_count = 2 repo/.git/worktrees/worktree-123/reftable/tables.list &&
 	test_line_count = 2 repo/.git/reftable/tables.list
 '
 

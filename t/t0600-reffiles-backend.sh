@@ -256,12 +256,12 @@ test_expect_success 'delete fails cleanly if packed-refs.new write fails' '
 	test_cmp unchanged actual
 '
 
-RWT="test-tool ref-store worktree:wt"
+RWT="test-tool ref-store worktree:wt-123"
 RMAIN="test-tool ref-store worktree:main"
 
 test_expect_success 'setup worktree' '
 	test_commit first &&
-	git worktree add -b wt-main wt &&
+	GIT_TEST_WORKTREE_SUFFIX=123 git worktree add -b wt-main wt &&
 	(
 		cd wt &&
 		test_commit second
@@ -279,9 +279,9 @@ test_expect_success 'for_each_reflog()' '
 	mkdir -p     .git/logs/refs/bisect &&
 	echo $ZERO_OID >.git/logs/refs/bisect/random &&
 
-	echo $ZERO_OID >.git/worktrees/wt/logs/PSEUDO_WT_HEAD &&
-	mkdir -p     .git/worktrees/wt/logs/refs/bisect &&
-	echo $ZERO_OID >.git/worktrees/wt/logs/refs/bisect/wt-random &&
+	echo $ZERO_OID >.git/worktrees/wt-123/logs/PSEUDO_WT_HEAD &&
+	mkdir -p     .git/worktrees/wt-123/logs/refs/bisect &&
+	echo $ZERO_OID >.git/worktrees/wt-123/logs/refs/bisect/wt-random &&
 
 	$RWT for-each-reflog >actual &&
 	cat >expected <<-\EOF &&

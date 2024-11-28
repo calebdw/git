@@ -24,27 +24,27 @@ test_expect_success 'lock main worktree' '
 test_expect_success 'lock linked worktree' '
 	git worktree lock --reason hahaha source &&
 	echo hahaha >expected &&
-	test_cmp expected .git/worktrees/source/locked
+	test_cmp expected .git/worktrees/source-*/locked
 '
 
 test_expect_success 'lock linked worktree from another worktree' '
-	rm .git/worktrees/source/locked &&
+	rm .git/worktrees/source-*/locked &&
 	git worktree add elsewhere &&
 	git -C elsewhere worktree lock --reason hahaha ../source &&
 	echo hahaha >expected &&
-	test_cmp expected .git/worktrees/source/locked
+	test_cmp expected .git/worktrees/source-*/locked
 '
 
 test_expect_success 'lock worktree twice' '
 	test_must_fail git worktree lock source &&
 	echo hahaha >expected &&
-	test_cmp expected .git/worktrees/source/locked
+	test_cmp expected .git/worktrees/source-*/locked
 '
 
 test_expect_success 'lock worktree twice (from the locked worktree)' '
 	test_must_fail git -C source worktree lock . &&
 	echo hahaha >expected &&
-	test_cmp expected .git/worktrees/source/locked
+	test_cmp expected .git/worktrees/source-*/locked
 '
 
 test_expect_success 'unlock main worktree' '
@@ -183,19 +183,19 @@ test_expect_success 'force remove worktree with untracked file' '
 
 test_expect_success 'remove missing worktree' '
 	git worktree add to-be-gone &&
-	test -d .git/worktrees/to-be-gone &&
+	test -d .git/worktrees/to-be-gone-* &&
 	mv to-be-gone gone &&
 	git worktree remove to-be-gone &&
-	test_path_is_missing .git/worktrees/to-be-gone
+	test_path_is_missing .git/worktrees/to-be-gone-*
 '
 
 test_expect_success 'NOT remove missing-but-locked worktree' '
 	git worktree add gone-but-locked &&
 	git worktree lock gone-but-locked &&
-	test -d .git/worktrees/gone-but-locked &&
+	test -d .git/worktrees/gone-but-locked-* &&
 	mv gone-but-locked really-gone-now &&
 	test_must_fail git worktree remove gone-but-locked &&
-	test_path_is_dir .git/worktrees/gone-but-locked
+	test_path_is_dir .git/worktrees/gone-but-locked-*
 '
 
 test_expect_success 'proper error when worktree not found' '
@@ -249,27 +249,27 @@ test_expect_success 'not remove a repo with initialized submodule' '
 
 test_expect_success 'move worktree with absolute path to relative path' '
 	test_config worktree.useRelativePaths false &&
-	git worktree add ./absolute &&
+	GIT_TEST_WORKTREE_SUFFIX=123 git worktree add ./absolute &&
 	git worktree move --relative-paths absolute relative &&
-	echo "gitdir: ../.git/worktrees/absolute" >expect &&
+	echo "gitdir: ../.git/worktrees/absolute-123" >expect &&
 	test_cmp expect relative/.git &&
 	echo "../../../relative/.git" >expect &&
-	test_cmp expect .git/worktrees/absolute/gitdir &&
+	test_cmp expect .git/worktrees/absolute-123/gitdir &&
 	test_config worktree.useRelativePaths true &&
 	git worktree move relative relative2 &&
-	echo "gitdir: ../.git/worktrees/absolute" >expect &&
+	echo "gitdir: ../.git/worktrees/absolute-123" >expect &&
 	test_cmp expect relative2/.git &&
 	echo "../../../relative2/.git" >expect &&
-	test_cmp expect .git/worktrees/absolute/gitdir
+	test_cmp expect .git/worktrees/absolute-123/gitdir
 '
 
 test_expect_success 'move worktree with relative path to absolute path' '
 	test_config worktree.useRelativePaths true &&
 	git worktree move --no-relative-paths relative2 absolute &&
-	echo "gitdir: $(pwd)/.git/worktrees/absolute" >expect &&
+	echo "gitdir: $(pwd)/.git/worktrees/absolute-123" >expect &&
 	test_cmp expect absolute/.git &&
 	echo "$(pwd)/absolute/.git" >expect &&
-	test_cmp expect .git/worktrees/absolute/gitdir
+	test_cmp expect .git/worktrees/absolute-123/gitdir
 '
 
 test_done

@@ -41,7 +41,7 @@ test_expect_success 'setup an embedded bare repo, secondary worktree and submodu
 		git -c protocol.file.allow=always \
 			submodule add --name subn -- ./bare-repo subd
 	) &&
-	test_path_is_dir outer-repo/.git/worktrees/outer-secondary &&
+	test_path_is_dir outer-repo/.git/worktrees/outer-secondary-* &&
 	test_path_is_dir outer-repo/.git/modules/subn
 '
 
@@ -97,7 +97,7 @@ test_expect_success 'no trace when "bare repository" is a subdir of .git' '
 '
 
 test_expect_success 'no trace in $GIT_DIR of secondary worktree' '
-	expect_accepted_implicit -C outer-repo/.git/worktrees/outer-secondary
+	expect_accepted_implicit -C outer-repo/.git/worktrees/outer-secondary-*
 '
 
 test_expect_success 'no trace in $GIT_DIR of a submodule' '

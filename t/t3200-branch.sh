@@ -246,14 +246,14 @@ test_expect_success 'git branch -M baz bam should succeed when baz is checked ou
 '
 
 test_expect_success REFFILES 'git branch -M fails if updating any linked working tree fails' '
-	git worktree add -b baz bazdir1 &&
-	git worktree add -f bazdir2 baz &&
-	touch .git/worktrees/bazdir1/HEAD.lock &&
+	GIT_TEST_WORKTREE_SUFFIX=123 git worktree add -b baz bazdir1 &&
+	GIT_TEST_WORKTREE_SUFFIX=456 git worktree add -f bazdir2 baz &&
+	touch .git/worktrees/bazdir1-123/HEAD.lock &&
 	test_must_fail git branch -M baz bam &&
 	test $(git -C bazdir2 rev-parse --abbrev-ref HEAD) = bam &&
 	git branch -M bam baz &&
-	rm .git/worktrees/bazdir1/HEAD.lock &&
-	touch .git/worktrees/bazdir2/HEAD.lock &&
+	rm .git/worktrees/bazdir1-123/HEAD.lock &&
+	touch .git/worktrees/bazdir2-456/HEAD.lock &&
 	test_must_fail git branch -M baz bam &&
 	test $(git -C bazdir1 rev-parse --abbrev-ref HEAD) = bam &&
 	rm -rf bazdir1 bazdir2 &&
