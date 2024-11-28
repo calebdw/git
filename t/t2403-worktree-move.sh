@@ -250,26 +250,26 @@ test_expect_success 'not remove a repo with initialized submodule' '
 test_expect_success 'move worktree with absolute path to relative path' '
 	test_config worktree.useRelativePaths false &&
 	GIT_TEST_WORKTREE_SUFFIX=123 git worktree add ./absolute &&
-	git worktree move --relative-paths absolute relative &&
-	echo "gitdir: ../.git/worktrees/absolute-123" >expect &&
+	GIT_TEST_WORKTREE_SUFFIX=456 git worktree move --relative-paths absolute relative &&
+	echo "gitdir: ../.git/worktrees/relative-456" >expect &&
 	test_cmp expect relative/.git &&
 	echo "../../../relative/.git" >expect &&
-	test_cmp expect .git/worktrees/absolute-123/gitdir &&
+	test_cmp expect .git/worktrees/relative-456/gitdir &&
 	test_config worktree.useRelativePaths true &&
-	git worktree move relative relative2 &&
-	echo "gitdir: ../.git/worktrees/absolute-123" >expect &&
+	GIT_TEST_WORKTREE_SUFFIX=789 git worktree move relative relative2 &&
+	echo "gitdir: ../.git/worktrees/relative2-789" >expect &&
 	test_cmp expect relative2/.git &&
 	echo "../../../relative2/.git" >expect &&
-	test_cmp expect .git/worktrees/absolute-123/gitdir
+	test_cmp expect .git/worktrees/relative2-789/gitdir
 '
 
 test_expect_success 'move worktree with relative path to absolute path' '
 	test_config worktree.useRelativePaths true &&
-	git worktree move --no-relative-paths relative2 absolute &&
-	echo "gitdir: $(pwd)/.git/worktrees/absolute-123" >expect &&
+	GIT_TEST_WORKTREE_SUFFIX=851 git worktree move --no-relative-paths relative2 absolute &&
+	echo "gitdir: $(pwd)/.git/worktrees/absolute-851" >expect &&
 	test_cmp expect absolute/.git &&
 	echo "$(pwd)/absolute/.git" >expect &&
-	test_cmp expect .git/worktrees/absolute-123/gitdir
+	test_cmp expect .git/worktrees/absolute-851/gitdir
 '
 
 test_done

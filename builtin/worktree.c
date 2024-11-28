@@ -1202,9 +1202,14 @@ static int move_worktree(int ac, const char **av, const char *prefix)
 	};
 	struct worktree **worktrees, *wt;
 	struct strbuf dst = STRBUF_INIT;
+	struct strbuf repo = STRBUF_INIT;
+	struct strbuf repo_dst = STRBUF_INIT;
 	struct strbuf errmsg = STRBUF_INIT;
 	const char *reason = NULL;
+	const char *new_id;
+	const char *suffix;
 	char *path;
+	int len;
 
 	ac = parse_options(ac, av, prefix, options, git_worktree_move_usage,
 			   0);
@@ -1250,9 +1255,28 @@ static int move_worktree(int ac, const char **av, const char *prefix)
 	if (rename(wt->path, dst.buf) == -1)
 		die_errno(_("failed to move '%s' to '%s'"), wt->path, dst.buf);
 
+	strbuf_realpath(&repo, git_common_path("worktrees/%s", wt->id), 1);
+	new_id = worktree_basename(dst.buf, &len);
+	strbuf_add(&repo_dst, new_id, dst.buf + len - new_id);
+	strbuf_realpath(&repo_dst, git_common_path("worktrees/%s", repo_dst.buf), 1);
+	suffix = getenv("GIT_TEST_WORKTREE_SUFFIX");
+	if (suffix)
+		strbuf_addf(&repo_dst, "-%s", suffix);
+	else
+		strbuf_addf(&repo_dst, "-%u", git_rand());
+	new_id = strrchr(repo_dst.buf, '/') + 1;
+	if (rename(repo.buf, repo_dst.buf) == -1)
+		die_errno(_("failed to move '%s' to '%s'"), repo.buf, repo_dst.buf);
+	else {
+		free(wt->id);
+		wt->id = xstrdup(new_id);
+	}
+
 	update_worktree_location(wt, dst.buf, use_relative_paths);
 
 	strbuf_release(&dst);
+	strbuf_release(&repo);
+	strbuf_release(&repo_dst);
 	free_worktrees(worktrees);
 	return 0;
 }
