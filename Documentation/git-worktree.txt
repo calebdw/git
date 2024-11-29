@@ -428,16 +428,21 @@ $ git worktree list
 
 For these annotations, a reason might also be available and this can be
 seen using the verbose mode. The annotation is then moved to the next line
-indented followed by the additional information.
+indented followed by the additional information. In verbose mode, the worktree
+id is also shown on the next line if available.
 
 ------------
 $ git worktree list --verbose
 /path/to/linked-worktree              abcd1234 [master]
+	id: linked-worktree-12345678
 /path/to/locked-worktree-no-reason    abcd5678 (detached HEAD) locked
+	id: locked-worktree-no-reason-89765464
 /path/to/locked-worktree-with-reason  1234abcd (brancha)
 	locked: worktree path is mounted on a portable device
+	id: locked-worktree-with-reason-41564654
 /path/to/prunable-worktree            5678abc1 (detached HEAD)
 	prunable: gitdir file points to non-existent location
+	id: prunable-worktree-98454651
 ------------
 
 Note that the annotation is moved to the next line if the additional
@@ -461,24 +466,29 @@ worktree /path/to/bare-source
 bare
 
 worktree /path/to/linked-worktree
+id linked-worktree-12345678
 HEAD abcd1234abcd1234abcd1234abcd1234abcd1234
 branch refs/heads/master
 
 worktree /path/to/other-linked-worktree
+id other-linked-worktree-879456466
 HEAD 1234abc1234abc1234abc1234abc1234abc1234a
 detached
 
 worktree /path/to/linked-worktree-locked-no-reason
+id locked-worktree-no-reason-89765464
 HEAD 5678abc5678abc5678abc5678abc5678abc5678c
 branch refs/heads/locked-no-reason
 locked
 
 worktree /path/to/linked-worktree-locked-with-reason
+id locked-worktree-with-reason-41564654
 HEAD 3456def3456def3456def3456def3456def3456b
 branch refs/heads/locked-with-reason
 locked reason why is locked
 
 worktree /path/to/linked-worktree-prunable
+id prunable-worktree-98454651
 HEAD 1233def1234def1234def1234def1234def1234b
 detached
 prunable gitdir file points to non-existent location

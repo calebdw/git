@@ -944,6 +944,8 @@ static void show_worktree_porcelain(struct worktree *wt, int line_terminator)
 	const char *reason;
 
 	printf("worktree %s%c", wt->path, line_terminator);
+	if (!is_main_worktree(wt))
+		printf("id %s%c", wt->id, line_terminator);
 	if (wt->is_bare)
 		printf("bare%c", line_terminator);
 	else {
@@ -1008,6 +1010,9 @@ static void show_worktree(struct worktree *wt, int path_maxlen, int abbrev_len)
 		strbuf_addf(&sb, "\n\tprunable: %s", reason);
 	else if (reason)
 		strbuf_addstr(&sb, " prunable");
+
+	if (verbose && !is_main_worktree(wt))
+		strbuf_addf(&sb, "\n\tid: %s", wt->id);
 
 	printf("%s\n", sb.buf);
 	strbuf_release(&sb);
